@@ -28,9 +28,11 @@ From: ubuntu:22.04
 %apprun code
   exec code "${@}"
 
-
 %environment
   export PATH=${HOME}/.local/bin:${PATH}
+
+%files
+  51716619E084DAB9.asc /var
 
 
 # Install dependencies
@@ -38,6 +40,12 @@ From: ubuntu:22.04
   # NOTE: To avoid interactive dialogue
   DEBIAN_FRONTEND=noninteractive && \
   ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone && \
+  apt-get update -y && \
+  apt-get install -y software-properties-common && \
+  apt-get install -y gnupg2 && \
+  cat /var/51716619E084DAB9.asc | apt-key add - && \
+  rm /var/51716619E084DAB9.asc && \
+  add-apt-repository ppa:ubuntugis/ppa && \
   apt-get update -y && \
   apt-get install -y --no-install-recommends \
     build-essential \
@@ -49,26 +57,30 @@ From: ubuntu:22.04
     ca-certificates \
     vim \
     git \
+    less \
     xsel
 
 
 # Install R
 %post
-  R_VERSION=4.3.2 && \
+  R_VERSION=4.3.3 && \
   DEBIAN_FRONTEND=noninteractive && \
+  wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
   apt-get update && \
   apt-get install -y --no-install-recommends \
     locales \
     gnupg \
     lsb-release \
-    software-properties-common && \
+    libgdal-dev \
+    libgeos-dev \
+    libproj-dev \
+    libudunits2-dev && \
   # NOTE: Configure default locale
   echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
   locale-gen en_US.utf8 && \
   /usr/sbin/update-locale LANG=en_US.UTF-8 && \
   LC_ALL=en_US.UTF-8 && \
   LANG=en_US.UTF-8 && \
-  wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
   add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
   apt update --allow-insecure-repositories && \
   apt-get install -y --no-install-recommends \
@@ -103,7 +115,7 @@ From: ubuntu:22.04
 
 # Install Julia
 %post
-  JULIA_VERSION=1.10.0 && \
+  JULIA_VERSION=1.10.2 && \
   JULIA_VERSION_SHORT=$(echo "${JULIA_VERSION}" | cut -d. -f 1,2) && \
   DEBIAN_FRONTEND=noninteractive && \
   apt-get update -y && \
