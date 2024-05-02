@@ -16,10 +16,10 @@ if grep -q '.libPaths' ${HOME}/.Rprofile
 then
   echo 'Please add `R_LIBS` path to `.Rprofile` manually'
 else
-  echo '.libPaths(c(file.path("~/R", paste0(R.version$platform, "-library"), paste(strsplit(strsplit(R.version$version.string, " ")[[1]][[3]], "[.]")[[1]][c(1, 2)], collapse = ".")), .libPaths()))' >> ${HOME}/.Rprofile
+  echo '.libPaths(c(file.path("~/R", paste0(R.version$platform, "-library"), paste(strsplit(strsplit(R.version$version.string, " ")[[1]][[3]], "[.]")[[1]][c(1, 2, 3)], collapse = ".")), .libPaths()))' >> ${HOME}/.Rprofile
 fi
 
-R -e 'dir.create(file.path("~/R", paste0(R.version$platform, "-library"), paste(strsplit(strsplit(R.version$version.string, " ")[[1]][[3]], "[.]")[[1]][c(1, 2)], collapse = ".")), recursive = TRUE, showWarnings = FALSE)' && \
+R -e 'dir.create(file.path("~/R", paste0(R.version$platform, "-library"), paste(strsplit(strsplit(R.version$version.string, " ")[[1]][[3]], "[.]")[[1]][c(1, 2, 3)], collapse = ".")), recursive = TRUE, showWarnings = FALSE)' && \
 
 R -e 'install.packages("RcppGSL")' && \
 R -e 'install.packages("RcppZiggurat")' && \
@@ -62,3 +62,8 @@ R -e 'install.packages("clipr")' && \
 R -e 'install.packages("languageserver")' && \
 R -e 'install.packages("httpgd")' && \
 R -e 'install.packages("jsonlite")'
+R -e 'install.packages("uwot")'
+R -e 'install.packages("Rtsne")'
+# NOTE: monocle3 dependencies
+R -e 'BiocManager::install(c("BiocGenerics", "DelayedArray", "DelayedMatrixStats", "limma", "lme4", "S4Vectors", "SingleCellExperiment", "SummarizedExperiment", "batchelor", "HDF5Array", "terra", "ggrastr"))'
+R -e 'devtools::install_github("cole-trapnell-lab/monocle3")'

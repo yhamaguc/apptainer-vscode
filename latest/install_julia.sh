@@ -13,18 +13,21 @@ julia -e 'import Pkg; Pkg.add("IJulia")'
 julia -e 'import Pkg; Pkg.add("Chain")'
 
 julia -e 'import Pkg; Pkg.add("RCall")'
+julia -e 'import Pkg; Pkg.add("RDatasets")'
 julia -e 'import Pkg; Pkg.add("PyCall")'
 
 julia -e 'import Pkg; Pkg.add("PooledArrays")'
 julia -e 'import Pkg; Pkg.add("OrderedCollections")'
+julia -e 'import Pkg; Pkg.add("CategoricalArrays")'
+julia -e 'import Pkg; Pkg.add("Missings")'
 
 julia -e 'import Pkg; Pkg.add("DataFrames")'
 julia -e 'import Pkg; Pkg.add("DataFramesMeta")'
-julia -e 'import Pkg; Pkg.add("Tidier")'
 
 julia -e 'import Pkg; Pkg.add("CSV")'
 julia -e 'import Pkg; Pkg.add("HTTP")'
 julia -e 'import Pkg; Pkg.add("DocOpt")'
+julia -e 'import Pkg; Pkg.add("Glob")'
 
 julia -e 'import Pkg; Pkg.add("BioAlignments")'
 julia -e 'import Pkg; Pkg.add("BioSequences")'
@@ -38,4 +41,13 @@ julia -e 'import Pkg; Pkg.add("PlotlyBase")'
 julia -e 'import Pkg; Pkg.add("PythonPlot")'
 julia -e 'import Pkg; Pkg.add("Plots")'
 julia -e 'import Pkg; Pkg.add("StatsPlots")'
+julia -e 'import Pkg; Pkg.add("GraphRecipes")'
+julia -e 'import Pkg; Pkg.add("ColorSchemes")'
+
+julia -e 'import Pkg; Pkg.add("TSne")'
+julia -e 'import Pkg; Pkg.add("UMAP")'
+
+julia -e 'import Pkg; Pkg.add("StatsBase")'
+julia -e 'import Pkg; Pkg.add("JLD2")'
+
 julia -e 'import Pkg; Pkg.add("GraphRecipes")'
