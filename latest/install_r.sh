@@ -64,6 +64,7 @@ R -e 'install.packages("httpgd")' && \
 R -e 'install.packages("jsonlite")'
 R -e 'install.packages("uwot")'
 R -e 'install.packages("Rtsne")'
+R -e 'install.packages("igraph")'
 # NOTE: monocle3 dependencies
 R -e 'BiocManager::install(c("BiocGenerics", "DelayedArray", "DelayedMatrixStats", "limma", "lme4", "S4Vectors", "SingleCellExperiment", "SummarizedExperiment", "batchelor", "HDF5Array", "terra", "ggrastr"))'
 R -e 'devtools::install_github("cole-trapnell-lab/monocle3")'

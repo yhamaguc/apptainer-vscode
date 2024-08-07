@@ -63,7 +63,7 @@ From: ubuntu:22.04
 
 # Install R
 %post
-  R_VERSION=4.3.3 && \
+  R_VERSION=4.4.1 && \
   DEBIAN_FRONTEND=noninteractive && \
   wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
   apt-get update && \
