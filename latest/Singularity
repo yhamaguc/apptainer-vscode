@@ -22,6 +22,12 @@ From: ubuntu:22.04
 %apprun radian
   exec radian "${@}"
 
+%apprun pandoc
+  exec pandoc "${@}"
+
+%apprun pandoc-citeproc
+  exec pandoc-citeproc "${@}"
+
 %apprun julia
   exec julia "${@}"
 
@@ -63,7 +69,7 @@ From: ubuntu:22.04
 
 # Install R
 %post
-  R_VERSION=4.4.1 && \
+  R_VERSION=4.4.3-1.2204.0 && \
   DEBIAN_FRONTEND=noninteractive && \
   wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
   apt-get update && \
@@ -103,6 +109,7 @@ From: ubuntu:22.04
     libjpeg-dev \
     libharfbuzz-dev \
     libfribidi-dev \
+    pandoc \
     ghostscript &&
   apt update --allow-insecure-repositories && \
   apt -y install ghostscript && \

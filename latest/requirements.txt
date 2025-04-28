@@ -12,3 +12,4 @@ pysqlite3-binary
 pyyaml
 six
 jupyter
+kaleido
