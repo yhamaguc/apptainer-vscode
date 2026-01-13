@@ -44,11 +44,13 @@ R -e 'BiocManager::install("rhdf5")' && \
 R -e 'BiocManager::install("GenomicFeatures")' && \
 R -e 'BiocManager::install("genomation")' && \
 R -e 'BiocManager::install("GenomicRanges")' && \
+R -e 'BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")' && \
 R -e 'BiocManager::install("methylKit")' && \
 R -e 'devtools::install_github("pachterlab/sleuth")' && \
 R -e 'install.packages("here")' && \
 R -e 'install.packages("docopt")' && \
 R -e 'install.packages("foreach")' && \
+R -e 'install.packages("svglite")'
 R -e 'install.packages("ggpubr")' && \
 R -e 'install.packages("ggplotify")' && \
 R -e 'install.packages("ggrepel")' && \
@@ -65,6 +67,4 @@ R -e 'install.packages("jsonlite")'
 R -e 'install.packages("uwot")'
 R -e 'install.packages("Rtsne")'
 R -e 'install.packages("igraph")'
-# NOTE: monocle3 dependencies
-R -e 'BiocManager::install(c("BiocGenerics", "DelayedArray", "DelayedMatrixStats", "limma", "lme4", "S4Vectors", "SingleCellExperiment", "SummarizedExperiment", "batchelor", "HDF5Array", "terra", "ggrastr"))'
-R -e 'devtools::install_github("cole-trapnell-lab/monocle3")'
+
