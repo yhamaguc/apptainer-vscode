@@ -1,17 +1,11 @@
-BootStrap: library
-From: ubuntu:22.04
+BootStrap: docker
+From: rocker/r-ubuntu:jammy
 
 %apprun python
   exec python "${@}"
 
 %apprun python3
-  exec python3 "${@}"
-
-%apprun pip
-  exec pip "${@}"
-
-%apprun pip3
-  exec pip3 "${@}"
+  exec python "${@}"
 
 %apprun R
   exec R "${@}"
@@ -22,14 +16,14 @@ From: ubuntu:22.04
 %apprun radian
   exec radian "${@}"
 
-%apprun pandoc
-  exec pandoc "${@}"
-
-%apprun pandoc-citeproc
-  exec pandoc-citeproc "${@}"
-
 %apprun julia
   exec julia "${@}"
+
+%apprun rustc
+  exec rustc "${@}"
+
+%apprun pandoc
+  exec pandoc "${@}"
 
 %apprun code
   exec code "${@}"
@@ -37,65 +31,47 @@ From: ubuntu:22.04
 %environment
   export PATH=${HOME}/.local/bin:${PATH}
 
-%files
-  51716619E084DAB9.asc /var
 
-
-# Install dependencies
+#
+# Base
+#
 %post
-  # NOTE: To avoid interactive dialogue
-  DEBIAN_FRONTEND=noninteractive && \
+  export DEBIAN_FRONTEND=noninteractive && \
   ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone && \
-  apt-get update -y && \
-  apt-get install -y software-properties-common && \
-  apt-get install -y gnupg2 && \
-  cat /var/51716619E084DAB9.asc | apt-key add - && \
-  rm /var/51716619E084DAB9.asc && \
-  add-apt-repository ppa:ubuntugis/ppa && \
-  apt-get update -y && \
-  apt-get install -y --no-install-recommends \
+  rm -rf /var/lib/apt/lists/* && \
+  apt-get -y -q update && \
+  apt-get -y -q install --no-install-recommends \
     build-essential \
-    cmake \
-    zsh \
-    wget \
-    curl \
-    gpg \
-    ca-certificates \
-    vim \
-    git \
-    less \
-    xsel
-
-
-# Install R
-%post
-  R_VERSION=4.5.2-1.2204.0 && \
-  DEBIAN_FRONTEND=noninteractive && \
-  wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends \
-    locales \
-    gnupg \
     lsb-release \
+    curl \
+    zlib1g-dev \
+    bzip2 \
+    zsh \
+    gpg \
+    git \
+    xsel \
+    sqlite3
+
+# latest CMAKE
+%post
+  CMAKE_VER=4.2.1 && \
+  cd /var/tmp && \
+  wget --no-verbose https://github.com/Kitware/CMake/releases/download/v${CMAKE_VER}/cmake-${CMAKE_VER}-linux-x86_64.sh && \
+  mkdir -p /opt/cmake-${CMAKE_VER}-linux-x86_64 && \
+  bash ./cmake-${CMAKE_VER}-linux-x86_64.sh --skip-license --prefix=/opt/cmake-${CMAKE_VER}-linux-x86_64 && \
+  ln -s /opt/cmake-${CMAKE_VER}-linux-x86_64/bin/* /usr/bin
+
+
+#
+# R dependencies
+#
+%post
+  apt-get -y -q install --no-install-recommends \
+    gnupg \
     libgdal-dev \
     libgeos-dev \
     libproj-dev \
-    libudunits2-dev && \
-  # NOTE: Configure default locale
-  echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
-  locale-gen en_US.utf8 && \
-  /usr/sbin/update-locale LANG=en_US.UTF-8 && \
-  LC_ALL=en_US.UTF-8 && \
-  LANG=en_US.UTF-8 && \
-  add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
-  apt update --allow-insecure-repositories && \
-  apt-get install -y --no-install-recommends \
-    r-base=${R_VERSION}* \
-    r-base-core=${R_VERSION}* \
-    r-base-dev=${R_VERSION}* \
-    r-recommended=${R_VERSION}* \
-    r-base-html=${R_VERSION}* \
-    r-doc-html=${R_VERSION}* \
+    libudunits2-dev \
     libgsl-dev \
     r-cran-gsl \
     libcurl4-openssl-dev \
@@ -110,64 +86,115 @@ From: ubuntu:22.04
     libharfbuzz-dev \
     libfribidi-dev \
     pandoc \
-    ghostscript &&
-  apt update --allow-insecure-repositories && \
-  apt -y install ghostscript && \
-  rm -rf /var/lib/apt/lists/* && \
-  # NOTE: Add a default CRAN mirror
-  echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'libcurl')" >> /usr/lib/R/etc/Rprofile.site && \
-  # NOTE: Necessary to write to the system volume
-  R -e 'install.packages("BiocManager")'
+    ghostscript
 
 
-# Install Julia
+#
+# Python
+#
 %post
-  JULIA_VERSION=1.10.2 && \
-  JULIA_VERSION_SHORT=$(echo "${JULIA_VERSION}" | cut -d. -f 1,2) && \
+  export PYTHON_VER=3.12 && \
+  cd /var/tmp && \
+  add-apt-repository ppa:deadsnakes/ppa && \
+  wget https://packages.apache.org/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
+  apt-get install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
+  apt-get -y -q update && \
+  apt-get -y -q install --no-install-recommends \
+    python${PYTHON_VER} \
+    tk-dev \
+    tcl-dev \
+    clinfo \
+    opencl-headers \
+    libarrow-dev \
+    libboost-all-dev && \
+  curl -kL https://bootstrap.pypa.io/get-pip.py | /usr/bin/python${PYTHON_VER} && \
+  ln -s /usr/bin/python${PYTHON_VER} /usr/local/bin/python3 && \
+  ln -s /usr/local/bin/python3 /usr/local/bin/python
+
+
+# CUDA toolkit and lightgbm with GPU support
+%post
+  CUDA_VER=12.9.1-575.57.08-1 && \
+  CUDA_MAJOR_VER=$(echo "${CUDA_VER}" | cut -d"." -f 1) && \
+  CUDA_MINOR_VER=$(echo "${CUDA_VER}" | cut -d"." -f 1,2) && \
+  CUDA_MINOR_VER_DASH=$(echo "$CUDA_MINOR_VER" | sed 's/\./-/') && \
+  CUDA_REVISION_VER=$(echo "${CUDA_VER}" | cut -d"-" -f 1) && \
+  cd /var/tmp && \
+  rm -rf /var/tmp/* && \
+  wget --no-verbose https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin && \
+  mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
+  wget --no-verbose https://developer.download.nvidia.com/compute/cuda/${CUDA_REVISION_VER}/local_installers/cuda-repo-ubuntu2204-${CUDA_MINOR_VER_DASH}-local_${CUDA_VER}_amd64.deb && \
+  dpkg -i cuda-repo-ubuntu2204-*_amd64.deb && \
+  cp /var/cuda-repo-ubuntu2204-*-local/cuda-*-keyring.gpg /usr/share/keyrings/ && \
+  apt-get -y -q update && \
+  apt-get -y -q install cuda-toolkit-${CUDA_MINOR_VER_DASH} && \
+  git clone --recursive https://github.com/microsoft/LightGBM && \
+  cd LightGBM && \
+  cmake -B build -S . -DUSE_CUDA=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda-${CUDA_MAJOR_VER}/bin/nvcc && \
+  cmake --build build -j$(nproc) && \
+  mkdir -p /opt/lightgbm/bin /opt/lightgbm/lib && \
+  mv lib_lightgbm.so /opt/lightgbm/lib && \
+  ln -s /opt/lightgbm/lib /opt/lightgbm/build && \
+  mv lightgbm /opt/lightgbm/bin && \
+  mv include /opt/lightgbm
+
+
+#
+# Julia
+#
+%post
+  JULIA_VER=1.10.2 && \
+  JULIA_MINOR_VER=$(echo "${JULIA_VER}" | cut -d. -f 1,2) && \
   DEBIAN_FRONTEND=noninteractive && \
-  apt-get update -y && \
   apt-get install -y --no-install-recommends \
     fonts-dejavu \
     gfortran && \
-  cd /tmp && \
+  cd /var/tmp && \
   wget \
     --no-verbose \
     --no-check-certificate \
-    "https://julialang-s3.julialang.org/bin/linux/x64/${JULIA_VERSION_SHORT}/julia-${JULIA_VERSION}-linux-x86_64.tar.gz" && \
-  mkdir "/opt/julia-${JULIA_VERSION}" && \
-  tar xzf julia-${JULIA_VERSION}-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VERSION} --strip-components=1 && \
+    "https://julialang-s3.julialang.org/bin/linux/x64/${JULIA_MINOR_VER}/julia-${JULIA_VER}-linux-x86_64.tar.gz" && \
+  mkdir "/opt/julia-${JULIA_VER}" && \
+  tar xzf julia-*-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VER} --strip-components=1 && \
   ln -s /opt/julia-*/bin/julia /usr/local/bin/julia && \
-  apt-get clean && \
-  rm -rf \
-    julia-${JULIA_VERSION}-linux-x86_64.tar.gz \
-    /var/lib/apt/lists/*
+  rm julia-*-linux-x86_64.tar.gz
 
 
-# Install Python
+#
+# Rust
+#
 %post
-  DEBIAN_FRONTEND=noninteractive && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends \
-    python3.10 \
-    python3-pip \
-    libpython3.10-dev \
-    sqlite3 && \
-  ln -s /usr/bin/python3 /usr/bin/python && \
-  rm -rf /var/lib/apt/lists/*
+  RUST_VER=1.92.0 && \
+  cd /var/tmp && \
+  wget \
+    --no-verbose \
+    --no-check-certificate \
+    https://static.rust-lang.org/dist/rust-${RUST_VER}-x86_64-unknown-linux-gnu.tar.xz && \
+    tar -xf rust-*-x86_64-unknown-linux-gnu.tar.xz && \
+    cd rust-*-x86_64-unknown-linux-gnu && \
+    ./install.sh --prefix=/opt/rust && \
+    cd .. && rm -rf rust-*
 
 
-# Install Latest VSCODE
+#
+# Visual Studio Code
+#
 %post
   cd /var/tmp && \
-  wget --no-verbose --no-check-certificate https://packages.microsoft.com/keys/microsoft.asc && \
+  wget --no-verbose --no-verbose --no-check-certificate https://packages.microsoft.com/keys/microsoft.asc && \
   gpg --dearmor -o packages.microsoft.gpg --batch --yes microsoft.asc && \
   install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg && \
   sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list' && \
   DEBIAN_FRONTEND=noninteractive && \
-  apt update && \
-  apt install -y apt-transport-https && \
-  apt update && \
-  apt install -y code && \
+  apt-get -y -q update && \
+  apt-get -y -q install --no-install-recommends code
+
+
+#
+# Cleanup
+#
+%post
+  rm -rf /opt/nvidia && \
   apt-get clean && \
   rm -rf \
     /config/* \

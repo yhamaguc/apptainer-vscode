@@ -1,10 +1,10 @@
-numpy
+numpy<2
 polars
 pyparse
 pyarrow
+pandas
 matplotlib
 seaborn
-pandas
 scipy
 radian
 plotly
@@ -13,3 +13,7 @@ pyyaml
 six
 jupyter
 kaleido
+scikit-learn
+shap
+docopt
+gtfparse
