@@ -42,12 +42,15 @@ install2.r -s -n -1 -d TRUE \
   Rtsne \
   igraph \
   NMF \
-  readxl
+  readxl \
+  ggalluvial \
+  clustAnalytics
 
 installGithub.r -d TRUE \
   pachterlab/sleuth \
   krassowski/complex-upset \
-  satijalab/seurat
+  satijalab/seurat \
+  ropensci/plotly
 
 install2.r -s -n -1 -d TRUE BiocManager
 biocpackages=(
@@ -67,6 +70,9 @@ biocpackages=(
   BSgenome.Hsapiens.UCSC.hg38
   methylKit
   maftools
+  IlluminaHumanMethylationEPICanno.ilm10b4.hg19
+  IlluminaHumanMethylation450kanno.ilmn12.hg19
+  IlluminaHumanMethylation27kanno.ilmn12.hg19
 )
 
 R -e "
