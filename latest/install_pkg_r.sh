@@ -44,7 +44,8 @@ install2.r -s -n -1 -d TRUE \
   NMF \
   readxl \
   ggalluvial \
-  clustAnalytics
+  clustAnalytics \
+  cli
 
 installGithub.r -d TRUE \
   pachterlab/sleuth \

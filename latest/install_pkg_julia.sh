@@ -41,6 +41,7 @@ packages = [
     "UMAP",
     "StatsBase",
     "JLD2",
+    "MultivariateStats",
 ]
 
 Pkg.add(packages)

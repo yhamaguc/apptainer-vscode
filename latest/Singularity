@@ -22,6 +22,9 @@ From: rocker/r-ubuntu:jammy
 %apprun rustc
   exec rustc "${@}"
 
+%apprun cargo 
+  exec cargo "${@}"
+
 %apprun pandoc
   exec pandoc "${@}"
 
@@ -29,7 +32,7 @@ From: rocker/r-ubuntu:jammy
   exec code "${@}"
 
 %environment
-  export PATH=${HOME}/.local/bin:${PATH}
+  export PATH=/opt/rust/bin:${HOME}/.local/bin:${PATH}
 
 
 #
