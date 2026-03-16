@@ -18,3 +18,4 @@ shap
 docopt
 gtfparse
 pybiomart
+pyflakes

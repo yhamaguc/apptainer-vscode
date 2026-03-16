@@ -17,7 +17,6 @@ fi
 
 R -e 'dir.create(file.path("~/R", paste0(R.version$platform, "-library"), paste(strsplit(strsplit(R.version$version.string, " ")[[1]][[3]], "[.]")[[1]][c(1, 2, 3)], collapse = ".")), recursive = TRUE, showWarnings = FALSE)' && \
 
-# FIXME: httpgd was removed from CRAN
 install2.r -s -n -1 -d TRUE \
   RcppGSL \
   RcppZiggurat \
@@ -45,13 +44,16 @@ install2.r -s -n -1 -d TRUE \
   readxl \
   ggalluvial \
   clustAnalytics \
-  cli
+  cli \
+  coop \
+  matrixStats
 
 installGithub.r -d TRUE \
   pachterlab/sleuth \
   krassowski/complex-upset \
   satijalab/seurat \
-  ropensci/plotly
+  ropensci/plotly \
+  nx10/httpgd
 
 install2.r -s -n -1 -d TRUE BiocManager
 biocpackages=(

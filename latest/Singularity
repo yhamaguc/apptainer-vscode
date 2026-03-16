@@ -22,28 +22,34 @@ From: rocker/r-ubuntu:jammy
 %apprun rustc
   exec rustc "${@}"
 
-%apprun cargo 
+%apprun cargo
   exec cargo "${@}"
 
 %apprun pandoc
   exec pandoc "${@}"
 
+%apprun claude
+  exec claude "${@}"
+
+%apprun gh
+  exec gh "${@}"
+
 %apprun code
   exec code "${@}"
 
 %environment
-  export PATH=/opt/rust/bin:${HOME}/.local/bin:${PATH}
+  export PATH=/opt/node/bin:/opt/rust/bin:/opt/node/bin:${HOME}/.local/bin:${PATH}
 
 
 #
 # Base
 #
 %post
-  export DEBIAN_FRONTEND=noninteractive && \
-  ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone && \
-  rm -rf /var/lib/apt/lists/* && \
-  apt-get -y -q update && \
-  apt-get -y -q install --no-install-recommends \
+  export DEBIAN_FRONTEND=noninteractive \
+  && ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone \
+  && rm -rf /var/lib/apt/lists/* \
+  && apt-get -y -q update \
+  && apt-get -y -q install --no-install-recommends \
     build-essential \
     lsb-release \
     curl \
@@ -53,16 +59,13 @@ From: rocker/r-ubuntu:jammy
     gpg \
     git \
     xsel \
-    sqlite3
-
-# latest CMAKE
-%post
-  CMAKE_VER=4.2.1 && \
-  cd /var/tmp && \
-  wget --no-verbose https://github.com/Kitware/CMake/releases/download/v${CMAKE_VER}/cmake-${CMAKE_VER}-linux-x86_64.sh && \
-  mkdir -p /opt/cmake-${CMAKE_VER}-linux-x86_64 && \
-  bash ./cmake-${CMAKE_VER}-linux-x86_64.sh --skip-license --prefix=/opt/cmake-${CMAKE_VER}-linux-x86_64 && \
-  ln -s /opt/cmake-${CMAKE_VER}-linux-x86_64/bin/* /usr/bin
+    sqlite3 \
+  && CMAKE_VER=4.2.1 \
+  && cd /var/tmp \
+  && wget --no-verbose https://github.com/Kitware/CMake/releases/download/v${CMAKE_VER}/cmake-${CMAKE_VER}-linux-x86_64.sh \
+  && mkdir -p /opt/cmake-${CMAKE_VER}-linux-x86_64 \
+  && bash ./cmake-${CMAKE_VER}-linux-x86_64.sh --skip-license --prefix=/opt/cmake-${CMAKE_VER}-linux-x86_64 \
+  && ln -s /opt/cmake-${CMAKE_VER}-linux-x86_64/bin/* /usr/bin
 
 
 #
@@ -96,110 +99,134 @@ From: rocker/r-ubuntu:jammy
 # Python
 #
 %post
-  export PYTHON_VER=3.12 && \
-  cd /var/tmp && \
-  add-apt-repository ppa:deadsnakes/ppa && \
-  wget https://packages.apache.org/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
-  apt-get install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
-  apt-get -y -q update && \
-  apt-get -y -q install --no-install-recommends \
+  export PYTHON_VER=3.12 \
+  && cd /var/tmp \
+  && add-apt-repository ppa:deadsnakes/ppa \
+  && wget https://packages.apache.org/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
+  && apt-get install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb \
+  && apt-get -y -q update \
+  && apt-get -y -q install --no-install-recommends \
     python${PYTHON_VER} \
     tk-dev \
     tcl-dev \
     clinfo \
     opencl-headers \
     libarrow-dev \
-    libboost-all-dev && \
-  curl -kL https://bootstrap.pypa.io/get-pip.py | /usr/bin/python${PYTHON_VER} && \
-  ln -s /usr/bin/python${PYTHON_VER} /usr/local/bin/python3 && \
-  ln -s /usr/local/bin/python3 /usr/local/bin/python
-
+    libboost-all-dev \
+  && curl -kL https://bootstrap.pypa.io/get-pip.py | /usr/bin/python${PYTHON_VER} \
+  && ln -s /usr/bin/python${PYTHON_VER} /usr/local/bin/python3 \
+  && ln -s /usr/local/bin/python3 /usr/local/bin/python
 
 # CUDA toolkit and lightgbm with GPU support
 %post
-  CUDA_VER=12.9.1-575.57.08-1 && \
-  CUDA_MAJOR_VER=$(echo "${CUDA_VER}" | cut -d"." -f 1) && \
-  CUDA_MINOR_VER=$(echo "${CUDA_VER}" | cut -d"." -f 1,2) && \
-  CUDA_MINOR_VER_DASH=$(echo "$CUDA_MINOR_VER" | sed 's/\./-/') && \
-  CUDA_REVISION_VER=$(echo "${CUDA_VER}" | cut -d"-" -f 1) && \
-  cd /var/tmp && \
-  rm -rf /var/tmp/* && \
-  wget --no-verbose https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin && \
-  mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
-  wget --no-verbose https://developer.download.nvidia.com/compute/cuda/${CUDA_REVISION_VER}/local_installers/cuda-repo-ubuntu2204-${CUDA_MINOR_VER_DASH}-local_${CUDA_VER}_amd64.deb && \
-  dpkg -i cuda-repo-ubuntu2204-*_amd64.deb && \
-  cp /var/cuda-repo-ubuntu2204-*-local/cuda-*-keyring.gpg /usr/share/keyrings/ && \
-  apt-get -y -q update && \
-  apt-get -y -q install cuda-toolkit-${CUDA_MINOR_VER_DASH} && \
-  git clone --recursive https://github.com/microsoft/LightGBM && \
-  cd LightGBM && \
-  cmake -B build -S . -DUSE_CUDA=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda-${CUDA_MAJOR_VER}/bin/nvcc && \
-  cmake --build build -j$(nproc) && \
-  mkdir -p /opt/lightgbm/bin /opt/lightgbm/lib && \
-  mv lib_lightgbm.so /opt/lightgbm/lib && \
-  ln -s /opt/lightgbm/lib /opt/lightgbm/build && \
-  mv lightgbm /opt/lightgbm/bin && \
-  mv include /opt/lightgbm
+  CUDA_VER=12.9.1-575.57.08-1 \
+  && CUDA_MAJOR_VER=$(echo "${CUDA_VER}" | cut -d"." -f 1) \
+  && CUDA_MINOR_VER=$(echo "${CUDA_VER}" | cut -d"." -f 1,2) \
+  && CUDA_MINOR_VER_DASH=$(echo "$CUDA_MINOR_VER" | sed 's/\./-/') \
+  && CUDA_REVISION_VER=$(echo "${CUDA_VER}" | cut -d"-" -f 1) \
+  && cd /var/tmp \
+  && rm -rf /var/tmp/* \
+  && wget --no-verbose https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin \
+  && mv cuda-ubuntu2204.pin /etc/apt/preferences.d/cuda-repository-pin-600 \
+  && wget --no-verbose https://developer.download.nvidia.com/compute/cuda/${CUDA_REVISION_VER}/local_installers/cuda-repo-ubuntu2204-${CUDA_MINOR_VER_DASH}-local_${CUDA_VER}_amd64.deb \
+  && dpkg -i cuda-repo-ubuntu2204-*_amd64.deb \
+  && cp /var/cuda-repo-ubuntu2204-*-local/cuda-*-keyring.gpg /usr/share/keyrings/ \
+  && apt-get -y -q update \
+  && apt-get -y -q install cuda-toolkit-${CUDA_MINOR_VER_DASH} \
+  && git clone --recursive https://github.com/microsoft/LightGBM \
+  && cd LightGBM \
+  && cmake -B build -S . -DUSE_CUDA=ON -DUSE_NCCL=OFF -DCMAKE_CUDA_COMPILER=/usr/local/cuda-${CUDA_MAJOR_VER}/bin/nvcc \
+  && cmake --build build -j$(nproc) \
+  && mkdir -p /opt/lightgbm/bin /opt/lightgbm/lib \
+  && mv lib_lightgbm.so /opt/lightgbm/lib \
+  && ln -s /opt/lightgbm/lib /opt/lightgbm/build \
+  && mv lightgbm /opt/lightgbm/bin \
+  && mv include /opt/lightgbm
 
 
 #
 # Julia
 #
 %post
-  JULIA_VER=1.10.2 && \
-  JULIA_MINOR_VER=$(echo "${JULIA_VER}" | cut -d. -f 1,2) && \
-  DEBIAN_FRONTEND=noninteractive && \
-  apt-get install -y --no-install-recommends \
+  JULIA_VER=1.10.2 \
+  && JULIA_MINOR_VER=$(echo "${JULIA_VER}" | cut -d. -f 1,2) \
+  && DEBIAN_FRONTEND=noninteractive \
+  && apt-get install -y --no-install-recommends \
     fonts-dejavu \
-    gfortran && \
-  cd /var/tmp && \
-  wget \
+    gfortran \
+  && cd /var/tmp \
+  && wget \
     --no-verbose \
     --no-check-certificate \
-    "https://julialang-s3.julialang.org/bin/linux/x64/${JULIA_MINOR_VER}/julia-${JULIA_VER}-linux-x86_64.tar.gz" && \
-  mkdir "/opt/julia-${JULIA_VER}" && \
-  tar xzf julia-*-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VER} --strip-components=1 && \
-  ln -s /opt/julia-*/bin/julia /usr/local/bin/julia && \
-  rm julia-*-linux-x86_64.tar.gz
+    "https://julialang-s3.julialang.org/bin/linux/x64/${JULIA_MINOR_VER}/julia-${JULIA_VER}-linux-x86_64.tar.gz" \
+  && mkdir "/opt/julia-${JULIA_VER}" \
+  && tar xzf julia-*-linux-x86_64.tar.gz -C /opt/julia-${JULIA_VER} --strip-components=1 \
+  && ln -s /opt/julia-*/bin/julia /usr/local/bin/julia \
+  && rm julia-*-linux-x86_64.tar.gz
 
 
 #
 # Rust
 #
 %post
-  RUST_VER=1.92.0 && \
-  cd /var/tmp && \
-  wget \
+  RUST_VER=1.92.0 \
+  && cd /var/tmp \
+  && wget \
     --no-verbose \
     --no-check-certificate \
-    https://static.rust-lang.org/dist/rust-${RUST_VER}-x86_64-unknown-linux-gnu.tar.xz && \
-    tar -xf rust-*-x86_64-unknown-linux-gnu.tar.xz && \
-    cd rust-*-x86_64-unknown-linux-gnu && \
-    ./install.sh --prefix=/opt/rust && \
-    cd .. && rm -rf rust-*
+    https://static.rust-lang.org/dist/rust-${RUST_VER}-x86_64-unknown-linux-gnu.tar.xz \
+  && tar -xf rust-*-x86_64-unknown-linux-gnu.tar.xz \
+  && cd rust-*-x86_64-unknown-linux-gnu \
+  && ./install.sh --prefix=/opt/rust \
+  && apt-get install -y ripgrep \
+  && cd .. && rm -rf rust-*
+
+
+#
+# AI CLIs
+#
+%post
+  NODEJS_VER=22.22.1 \
+  && cd /var/tmp \
+  && wget \
+    --no-verbose \
+    --no-check-certificate \
+    https://nodejs.org/dist/v${NODEJS_VER}/node-v${NODEJS_VER}-linux-x64.tar.xz \
+  && tar -xf node-v${NODEJS_VER}-linux-x64.tar.xz \
+  && mv node-v${NODEJS_VER}-linux-x64 /opt/node \
+  && export PATH=/opt/node/bin:$PATH \
+  && /opt/node/bin/npm install -g @anthropic-ai/claude-code \
+  && mkdir -p -m 755 /etc/apt/keyrings \
+  && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+  && cat $out | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+  && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+  && mkdir -p -m 755 /etc/apt/sources.list.d \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+  && apt-get -y -q update \
+  && apt-get -y -q install gh
 
 
 #
 # Visual Studio Code
 #
 %post
-  cd /var/tmp && \
-  wget --no-verbose --no-verbose --no-check-certificate https://packages.microsoft.com/keys/microsoft.asc && \
-  gpg --dearmor -o packages.microsoft.gpg --batch --yes microsoft.asc && \
-  install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg && \
-  sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list' && \
-  DEBIAN_FRONTEND=noninteractive && \
-  apt-get -y -q update && \
-  apt-get -y -q install --no-install-recommends code
+  cd /var/tmp \
+  && wget --no-verbose --no-verbose --no-check-certificate https://packages.microsoft.com/keys/microsoft.asc \
+  && gpg --dearmor -o packages.microsoft.gpg --batch --yes microsoft.asc \
+  && install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg \
+  && sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list' \
+  && DEBIAN_FRONTEND=noninteractive \
+  && apt-get -y -q update \
+  && apt-get -y -q install --no-install-recommends code
 
 
 #
 # Cleanup
 #
 %post
-  rm -rf /opt/nvidia && \
-  apt-get clean && \
-  rm -rf \
+  rm -rf /opt/nvidia \
+  && apt-get clean \
+  && rm -rf \
     /config/* \
     /var/lib/apt/lists/* \
     /var/tmp/*
