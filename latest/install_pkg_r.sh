@@ -46,7 +46,8 @@ install2.r -s -n -1 -d TRUE \
   clustAnalytics \
   cli \
   coop \
-  matrixStats
+  matrixStats \
+  ggseqlogo
 
 installGithub.r -d TRUE \
   pachterlab/sleuth \

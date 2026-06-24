@@ -1,4 +1,4 @@
-numpy<2
+numpy
 polars
 pyparse
 pyarrow
@@ -19,3 +19,4 @@ docopt
 gtfparse
 pybiomart
 pyflakes
+dill
